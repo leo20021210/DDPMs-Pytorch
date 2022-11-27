@@ -90,7 +90,6 @@ class GaussianDDPMClassifierFreeGuidance(pl.LightningModule):
         except for the class conditioning part.
         """
         X, y = batch
-        print(batch_idx)
         with torch.no_grad():
             X = X * 2 - 1  # normalize to -1, 1
         y = one_hot(y, self.num_classes).float()
