@@ -56,6 +56,7 @@ class ResBlockTimeEmbed(nn.Module):
                  time_embed_size: int, p_dropout: float):
         super().__init__()
         num_groups_in = self.find_max_num_groups(in_channels)
+        #print(in_channels, num_groups_in)
         self.conv = nn.Sequential(
             nn.GroupNorm(num_groups_in, in_channels),
             nn.GELU(),
