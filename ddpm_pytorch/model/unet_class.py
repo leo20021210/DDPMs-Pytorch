@@ -88,18 +88,11 @@ class UNetTimeStepClassConditioned(nn.Module):
         x_channels = x.shape[1]
         if self.assert_shapes: tg.guard(x, "B, C, W, H")
         if self.assert_shapes: tg.guard(c, "B, NUMCLASSES")
-        #print(t.shape)
-        #t = torch.unsqueeze(t, -1)
         t = t.view(-1, 1)
-        #print(t.shape)
         time_embedding = self.time_embed(t)
         if self.assert_shapes: tg.guard(time_embedding, "B, TE")
-        #print(x.shape)
-        #print(time_embedding.shape)
-        #print(c.shape)
         h = self.forward_unet(x, time_embedding, c)
         x_recon = h
-        #print(x_recon.shape)
         if self.assert_shapes: tg.guard(x_recon, "B, C, W, H")
         return x_recon
 
