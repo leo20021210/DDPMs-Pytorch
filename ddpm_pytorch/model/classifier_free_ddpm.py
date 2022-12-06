@@ -145,6 +145,7 @@ class GaussianDDPMClassifierFreeGuidance(pl.LightningModule):
         T = T or self.T
         batch_size = batch_size or 1
         is_c_none = c is None
+        #is_c_none = True
         if is_c_none:
             c = torch.zeros(batch_size, self.num_classes, device=self.device)
         if get_intermediate_steps:

@@ -25,7 +25,7 @@ def parse_args():
     parser.add_argument('-r', '--run', type=Path, required=True, help='Path to the checkpoint file')
     parser.add_argument('--seed', '-s', type=int, default=0, help='Random seed')
     parser.add_argument('--device', '-d', type=str, default='cpu', help='Device to use')
-    parser.add_argument('--batch-size', '-b', type=int, default=16, help='Batch size')
+    parser.add_argument('--batch-size', '-b', type=int, default=1, help='Batch size')
     parser.add_argument('-w', type=float, default=0.3, help='Class guidance')
     parser.add_argument('--scheduler', choices=scheduler_names, default=None,
                         help='use a custom scheduler', dest='scheduler')
@@ -49,6 +49,8 @@ def main():
     hparams = OmegaConf.load(run_path.parent / 'config.yaml')
     if args.T is not None:
         hparams.T = args.T
+    print(hparams.T)
+    print(hparams)
     if args.w is None:
         args.w = hparams.model.w
     model_hparams = hparams.model
@@ -73,9 +75,10 @@ def main():
     for i_c in tqdm(range(model.num_classes)):
         c = torch.zeros((args.batch_size, model.num_classes), device=args.device)
         c[:, i_c] = 1
-        gen_images = model.generate(batch_size=args.batch_size, c=c)
+        gen_images = model.generate(batch_size=args.batch_size, c=c, get_intermediate_steps = True)
+        gen_images = torch.cat(gen_images, dim = 0)
         # save images
-        torchvision.utils.save_image(gen_images, run_path.parent / 'generated_images_' + str(i_c) + '.png', nrow=4, padding=2, normalize=True)
+        torchvision.utils.save_image(gen_images, run_path.parent / 'generated_images_' + str(i_c) + '.png', nrow=50, padding=2, normalize=True)
         #images.append(gen_images)
     #images = torch.cat(images, dim=0)
 
