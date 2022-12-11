@@ -63,8 +63,8 @@ class UNetTimeStepClassConditioned(nn.Module):
         self.downsample_blocks = nn.ModuleList([
             ResBlockTimeEmbedClassConditioned(channels[i], channels[i + 1], kernel_sizes[i], strides[i],
                                               paddings[i], time_embed_size, p_dropouts[i], num_classes,
-        #                                      class_embed_size, assert_shapes) for i in range(len(channels) - 1)
-                                              channels[i], assert_shapes) for i in range(len(channels) - 1)
+                                              class_embed_size, assert_shapes) for i in range(len(channels) - 1)
+                                              #channels[i], assert_shapes) for i in range(len(channels) - 1)
         ])
 
         self.use_downsample = downsample
@@ -78,8 +78,8 @@ class UNetTimeStepClassConditioned(nn.Module):
                                               kernel_sizes[-i - 1],
                                               strides[-i - 1], paddings[-i - 1], time_embed_size, p_dropouts[-i - 1],
                                               num_classes,
-                                              #class_embed_size, assert_shapes) for i in range(len(channels) - 1)
-                                              channels[-i - 1], assert_shapes) for i in range(len(channels) - 1)
+                                              class_embed_size, assert_shapes) for i in range(len(channels) - 1)
+                                              #channels[-i - 1], assert_shapes) for i in range(len(channels) - 1)
         ])
         self.dropouts = nn.ModuleList([nn.Dropout(p) for p in p_dropouts])
         self.p_dropouts = p_dropouts

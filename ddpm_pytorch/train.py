@@ -54,7 +54,7 @@ def train(config: DictConfig):
         config.devices = 1
     trainer = pl.Trainer(callbacks=callbacks, accelerator=config.accelerator, devices=config.devices,
                          gradient_clip_val=config.gradient_clip_val,
-                         gradient_clip_algorithm=config.gradient_clip_algorithm, max_epochs = 50)
+                         gradient_clip_algorithm=config.gradient_clip_algorithm, max_epochs = 25)
     trainer.fit(model, train_dl, val_dl, )
 
 
