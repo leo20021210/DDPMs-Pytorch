@@ -45,7 +45,7 @@ class UNetTimeStepClassConditioned(nn.Module):
 
     def __init__(self, channels: List[int], kernel_sizes: List[int], strides: List[int], paddings: List[int],
                  downsample: bool, p_dropouts: List[float], time_embed_size: int, num_classes: int,
-                 class_embed_size: int,
+                 class_embed_size: List[int],
                  assert_shapes: bool = True):
         super().__init__()
         assert len(channels) == (len(kernel_sizes) + 1) == (len(strides) + 1) == (len(paddings) + 1) == \
@@ -63,7 +63,7 @@ class UNetTimeStepClassConditioned(nn.Module):
         self.downsample_blocks = nn.ModuleList([
             ResBlockTimeEmbedClassConditioned(channels[i], channels[i + 1], kernel_sizes[i], strides[i],
                                               paddings[i], time_embed_size, p_dropouts[i], num_classes,
-                                              class_embed_size, assert_shapes) for i in range(len(channels) - 1)
+                                              class_embed_size[i], assert_shapes) for i in range(len(channels) - 1)
                                               #channels[i], assert_shapes) for i in range(len(channels) - 1)
         ])
 
@@ -71,14 +71,14 @@ class UNetTimeStepClassConditioned(nn.Module):
         self.downsample_op = nn.MaxPool2d(kernel_size=2)
         self.middle_block = ResBlockTimeEmbedClassConditioned(channels[-1], channels[-1], kernel_sizes[-1], strides[-1],
                                                               paddings[-1], time_embed_size, p_dropouts[-1],
-                                                              #num_classes, class_embed_size, assert_shapes)
-                                                              num_classes, channels[-1], assert_shapes)
+                                                              num_classes, class_embed_size[-1], assert_shapes)
+                                                              #num_classes, channels[-1], assert_shapes)
         self.upsample_blocks = nn.ModuleList([
             ResBlockTimeEmbedClassConditioned((2 if i != 0 else 1) * channels[-i - 1], channels[-i - 2],
                                               kernel_sizes[-i - 1],
                                               strides[-i - 1], paddings[-i - 1], time_embed_size, p_dropouts[-i - 1],
                                               num_classes,
-                                              class_embed_size, assert_shapes) for i in range(len(channels) - 1)
+                                              class_embed_size[i], assert_shapes) for i in range(len(channels) - 1)
                                               #channels[-i - 1], assert_shapes) for i in range(len(channels) - 1)
         ])
         self.dropouts = nn.ModuleList([nn.Dropout(p) for p in p_dropouts])

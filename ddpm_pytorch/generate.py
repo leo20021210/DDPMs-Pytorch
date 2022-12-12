@@ -28,6 +28,8 @@ scheduler_paths = [p for p in SCHEDULER.files('*.yaml')]
 scheduler_names = [x.basename().replace('.yaml', '') for x in scheduler_paths]
 scheduler_map = {name: path for name, path in zip(scheduler_names, scheduler_paths)}
 
+resize = transforms.Resize(28)
+
 class ConvNet(nn.Module):
     def __init__(self):
         super(ConvNet, self).__init__()
@@ -40,6 +42,9 @@ class ConvNet(nn.Module):
         self.linear2 = nn.Linear(64, 10)
 
     def forward(self, input):
+        #input = input.float()
+        #input = resize(input)
+        #input = input[:, 0: 1, :, :]
         input = torch.relu(self.conv1(input))
         input = torch.relu(self.conv2(input))
         input = self.maxpool(input)
@@ -105,7 +110,7 @@ def main():
     model.load_state_dict(torch.load(run_path, map_location=args.device)['state_dict'])
     model = model.eval()
     images = []
-    fid_sum = 0
+    xs = []
     score_sum = 0
     model.on_fit_start()
 
@@ -127,6 +132,7 @@ def main():
         samples = indices[random.sample(range(len(indices)), args.batch_size)]
         x = plotset.data[samples]
         x = x.unsqueeze(1)
+        xs.append(x)
         #x = x.expand(x.shape[0], 3, x.shape[2], x.shape[3])
         # save images
         torchvision.utils.save_image(gen_images, run_path.parent / 'generated_images_' + str(i_c) + '.png', nrow=50, padding=2, normalize=True)
@@ -135,23 +141,22 @@ def main():
         #print(torch.max(gen_images), torch.min(gen_images))
         #print(torch.max(gen_images), torch.min(gen_images))
         
-        fid = FrechetInceptionDistance(feature = 64, normalize = True)
-        xfid = x.expand(x.shape[0], 3, x.shape[2], x.shape[3])
-        imagefid = gen_images.expand(gen_images.shape[0], 3, gen_images.shape[2], gen_images.shape[3]).cpu()
-        fid.update(xfid, real=True)
-        imagefid = imagefid.type(torch.uint8)
-        fid.update(imagefid, real=False)
-        fid_sum += fid.compute()
-        
         images.append(gen_images.cpu())
         pred = F.log_softmax(network(gen_images.cpu()))
         score = torch.mean(pred[:, i_c])
         score_sum -= score
     images = torch.cat(images, dim=0)
+    xs = torch.cat(xs, dim = 0)
     inception = InceptionScore(feature = network, normalize = True)
     inception.update(images)
+    fid = FrechetInceptionDistance(feature = 64, normalize = True)
+    xs = xs.expand(xs.shape[0], 3, xs.shape[2], xs.shape[3])
+    images = images.expand(images.shape[0], 3, images.shape[2], images.shape[3])
+    fid.update(xs, real=True)
+    images = images.type(torch.uint8)
+    fid.update(images, real=False)        
     print("IS: " + str(inception.compute()))
-    print("FID: " + str(fid_sum / model.num_classes))
+    print("FID: " + str(fid.compute()))
     print("class IS: " + str(score_sum / model.num_classes))
 
 
