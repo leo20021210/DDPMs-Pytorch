@@ -1,7 +1,7 @@
 _target_: ddpm_pytorch.model.classifier_free_ddpm.GaussianDDPMClassifierFreeGuidance
 denoiser_module:
   _target_: ddpm_pytorch.model.unet_class.UNetTimeStepClassConditioned
-  channels: [3, 128, 256, 256, 384]
+  channels: [1, 128, 256, 256, 512]
   kernel_sizes: [3, 3, 3, 3]
   strides: [1, 1, 1, 1]
   paddings: [1, 1, 1, 1]
@@ -9,7 +9,7 @@ denoiser_module:
   time_embed_size: 100  #did not found this hp on the paper
   downsample: true
   num_classes: ${dataset.num_classes}
-  class_embed_size: 3
+  class_embed_size: [3, 3, 3, 3, 1024]
   assert_shapes: false
 T: ${noise_steps}
 width: ${dataset.width}
@@ -18,5 +18,5 @@ logging_freq: 1_000
 input_channels: ${dataset.channels}
 num_classes: ${dataset.num_classes}
 v: 0.2
-w: 0.3
+w: 3
 p_uncond: 0.2

@@ -86,11 +86,12 @@ class ResBlockTimeEmbed(nn.Module):
         time_embed = time_embed.view(time_embed.shape[0], time_embed.shape[1], 1, 1)
         h = h + time_embed
         return self.out_layer(h) + self.skip_connection(x)
+        #return self.out_layer(h)
 
 
 class ImageSelfAttention(nn.Module):
 
-    def __init__(self, num_channels: int, num_heads: int = 1):
+    def __init__(self, num_channels: int, num_heads: int = 4):
         super().__init__()
         self.channels = num_channels
         self.heads = num_heads

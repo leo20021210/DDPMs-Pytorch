@@ -145,6 +145,7 @@ class GaussianDDPMClassifierFreeGuidance(pl.LightningModule):
         T = T or self.T
         batch_size = batch_size or 1
         is_c_none = c is None
+        #is_c_none = False
         if is_c_none:
             c = torch.zeros(batch_size, self.num_classes, device=self.device)
         if get_intermediate_steps:
@@ -152,11 +153,13 @@ class GaussianDDPMClassifierFreeGuidance(pl.LightningModule):
         z_t = torch.randn(batch_size, self.input_channels,  # start with random noise sampled from N(0, 1)
                           self.width, self.height, device=self.device)
         for t in range(T - 1, 0, -1):
+            ratio = t / T
             if get_intermediate_steps:
                 steps.append(z_t)
             t = torch.LongTensor([t] * batch_size).to(self.device).view(-1, 1)
             t_expanded = t.view(-1, 1, 1, 1)
-            if is_c_none:
+            if is_c_none or ratio <= 0.9:
+            #if is_c_none:
                 # compute unconditioned noise
                 eps = self(z_t, t / T, c)  # predict via nn the noise
             else:
