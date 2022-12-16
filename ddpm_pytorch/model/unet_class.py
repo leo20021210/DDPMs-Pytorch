@@ -15,24 +15,27 @@ class ResBlockTimeEmbedClassConditioned(ResBlockTimeEmbed):
                  assert_shapes: bool = True):
         super().__init__(in_channels + class_embed_size, out_channels, kernel_size, stride, padding,
                          time_embed_size, p_dropout)
-        self.linear_map_class = nn.Sequential(
-            nn.Linear(num_classes, class_embed_size),
-            nn.ReLU(),
-            nn.Linear(class_embed_size, class_embed_size),
-            nn.ReLU(),
-            nn.Linear(class_embed_size, class_embed_size),
-            nn.ReLU(),
-        )
+        if class_embed_size == 0:
+            self.linear_map_class = None
+        else:
+            self.linear_map_class = nn.Sequential(
+                nn.Linear(num_classes, class_embed_size),
+                nn.ReLU(),
+                nn.Linear(class_embed_size, class_embed_size),
+                nn.ReLU(),
+                nn.Linear(class_embed_size, class_embed_size),
+                nn.ReLU()
+            )
 
         self.assert_shapes = assert_shapes
 
     def forward(self, x, time_embed, c):
-        emb_c = self.linear_map_class(c)
-        emb_c = emb_c.view(*emb_c.shape, 1, 1)
-        emb_c = emb_c.expand(-1, -1, x.shape[-2], x.shape[-1])
-        if self.assert_shapes: tg.guard(emb_c, "B, C, W, H")
-        #print(emb_c.shape, x.shape)
-        x = torch.cat([x, emb_c], dim=1)
+        if self.linear_map_class:
+            emb_c = self.linear_map_class(c)
+            emb_c = emb_c.view(*emb_c.shape, 1, 1)
+            emb_c = emb_c.expand(-1, -1, x.shape[-2], x.shape[-1])
+            if self.assert_shapes: tg.guard(emb_c, "B, C, W, H")
+            x = torch.cat([x, emb_c], dim=1)
         return super().forward(x, time_embed)
 
 

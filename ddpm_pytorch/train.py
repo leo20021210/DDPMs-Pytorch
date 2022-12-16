@@ -37,7 +37,6 @@ def train(config: DictConfig):
 
     model.save_hyperparameters(OmegaConf.to_object(config)['model'])
 
-    #pin_memory = config.accelerator and 'gpu' in config.accelerator
     pin_memory = torch.cuda.is_available()
     train_dl = DataLoader(train_dataset, batch_size=config.batch_size, pin_memory=pin_memory)
     val_dl = DataLoader(val_dataset, batch_size=config.batch_size, pin_memory=pin_memory)
@@ -54,7 +53,7 @@ def train(config: DictConfig):
         config.devices = 1
     trainer = pl.Trainer(callbacks=callbacks, accelerator=config.accelerator, devices=config.devices,
                          gradient_clip_val=config.gradient_clip_val,
-                         gradient_clip_algorithm=config.gradient_clip_algorithm, max_epochs = 25)
+                         gradient_clip_algorithm=config.gradient_clip_algorithm, max_epochs = 12)
     trainer.fit(model, train_dl, val_dl, )
 
 

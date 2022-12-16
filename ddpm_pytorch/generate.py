@@ -42,9 +42,6 @@ class ConvNet(nn.Module):
         self.linear2 = nn.Linear(64, 10)
 
     def forward(self, input):
-        #input = input.float()
-        #input = resize(input)
-        #input = input[:, 0: 1, :, :]
         input = torch.relu(self.conv1(input))
         input = torch.relu(self.conv2(input))
         input = self.maxpool(input)
@@ -77,7 +74,6 @@ def main():
     """
     args = parse_args()
 
-    print(args)
     network = ConvNet()
     network.load_state_dict(torch.load('/scratch/pl2285/ddpm/DDPMs-Pytorch/ddpm_pytorch/model.pth'))
     network.eval()
@@ -89,8 +85,6 @@ def main():
     hparams = OmegaConf.load(run_path.parent / 'config.yaml')
     if args.T is not None:
         hparams.T = args.T
-    print(hparams.T)
-    print(hparams)
     if args.w is None:
         args.w = hparams.model.w
     model_hparams = hparams.model
@@ -123,8 +117,6 @@ def main():
         c = torch.zeros((args.batch_size, model.num_classes), device=args.device)
         c[:, i_c] = 1
         gen_images = model.generate(batch_size=args.batch_size, c=c)
-        #print(gen_images.shape, torch.max(gen_images), torch.min(gen_images))
-        #gen_images = torch.cat(gen_images, dim = 0)
         plotset = datasets.MNIST(root = './dataset',train=False, download=True, transform=data_transform)
         x = np.array(plotset.targets)
         indices = np.where(x == i_c)
@@ -133,19 +125,13 @@ def main():
         x = plotset.data[samples]
         x = x.unsqueeze(1)
         xs.append(x)
-        #x = x.expand(x.shape[0], 3, x.shape[2], x.shape[3])
-        # save images
-        torchvision.utils.save_image(gen_images, run_path.parent / 'generated_images_' + str(i_c) + '.png', nrow=50, padding=2, normalize=True)
-        #gen_images = gen_images.expand(gen_images.shape[0], 3, gen_images.shape[2], gen_images.shape[3])
-        #gen_images = gen_images.type(torch.uint8).cpu()
-        #print(torch.max(gen_images), torch.min(gen_images))
-        #print(torch.max(gen_images), torch.min(gen_images))
         
         images.append(gen_images.cpu())
         pred = F.log_softmax(network(gen_images.cpu()))
         score = torch.mean(pred[:, i_c])
         score_sum -= score
     images = torch.cat(images, dim=0)
+    torchvision.utils.save_image(images, run_path.parent / 'generated_images.png', nrow=20, padding=2, normalize=True)
     xs = torch.cat(xs, dim = 0)
     inception = InceptionScore(feature = network, normalize = True)
     inception.update(images)
@@ -157,7 +143,7 @@ def main():
     fid.update(images, real=False)        
     print("IS: " + str(inception.compute()))
     print("FID: " + str(fid.compute()))
-    print("class IS: " + str(score_sum / model.num_classes))
+    print("NLL: " + str(score_sum / model.num_classes))
 
 
 if __name__ == '__main__':
